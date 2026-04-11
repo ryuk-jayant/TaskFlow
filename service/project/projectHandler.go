@@ -1,0 +1,161 @@
+package project
+
+import (
+	"encoding/json"
+	"example/web-service-gin/service/middleware"
+	"example/web-service-gin/types"
+	"example/web-service-gin/utils"
+	"log"
+	"net/http"
+	"time"
+
+	"github.com/google/uuid"
+	"github.com/gorilla/mux"
+)
+
+type Handler struct {
+	Store types.StoreProject
+}
+
+type Error struct {
+	Err     string
+	Message string
+	Code    int
+}
+
+func NewHandler(store types.StoreProject) *Handler {
+	return &Handler{Store: store}
+}
+
+func (h *Handler) RegisterRoutes(router *mux.Router) {
+	secret := []byte("MysecretNeedToStoreInEn3") //TODO:ADD SECRET TO ENV
+	protected := router.PathPrefix("/projects").Subrouter()
+	protected.Use(middleware.JWTMiddleware(secret))
+	protected.HandleFunc("/", h.addProject).Methods("POST")       //add project
+	protected.HandleFunc("/", h.getAllProjects).Methods("GET")    //get all projects of user
+	protected.HandleFunc("/{id}", h.getProject).Methods("GET")     //get all project by id
+	protected.HandleFunc("/{id}", h.editProject).Methods("PUT")    //modify a project by id
+	protected.HandleFunc("/{id}", h.editProject).Methods("DELETE") //delete a project and all the tasks in it
+}
+
+func (h *Handler) addProject(w http.ResponseWriter, r *http.Request) {
+	//0 context extraction
+	userId := r.Context().Value("userId").(string)
+	// email := r.Context().Value("email").(string)
+	// utils.WriteJson(w, http.StatusAccepted, map[string]string{"user":userId,"email":email})
+	//1
+	var payload types.NewProjectPayload
+	if err := utils.DecodePayload(r, &payload); err != nil {
+		utils.WriteJson(w, http.StatusBadRequest, map[string]string{"err": "Encountered an error"})
+		return
+	}
+	//2 check if project is non unique
+	_, err := h.Store.GetProjectBYName(payload.Name, userId)
+	if err == nil {
+		err := Error{Err: "", Message: "Project with " + payload.Name + " Exists", Code: http.StatusConflict}
+		errJson, _ := json.Marshal(err)
+		http.Error(w, string(errJson), http.StatusConflict)
+		return
+	}
+	//3
+	var ProjectInsertion types.Project
+	ProjectInsertion.Id = uuid.New()
+	ProjectInsertion.Created_at = time.Now()
+	ProjectInsertion.Name = payload.Name
+	ProjectInsertion.Description = payload.Description
+	ProjectInsertion.Owner_id = userId
+	//4
+	log.Println("Adding project for ",userId)
+	err = h.Store.CreateProject(&ProjectInsertion)
+	if err != nil {
+		utils.WriteJson(w, http.StatusFailedDependency, err)
+		return
+	}
+
+	utils.WriteJson(w, http.StatusAccepted, map[string]string{"Message": "Project added to DB!"})
+}
+
+func (h *Handler) getAllProjects(w http.ResponseWriter, r *http.Request) {
+	userId, ok := r.Context().Value("userId").(string)
+	if !ok {
+		utils.WriteJson(w, http.StatusUnauthorized, map[string]string{
+			"error": "unauthorized",
+		})
+		return
+	}
+
+	projects, err := h.Store.GetProjectBYOwner(userId)
+	if err != nil {
+		utils.WriteJson(w, http.StatusInternalServerError, map[string]string{
+			"error": "failed to fetch projects",
+		})
+		return
+	}
+
+	utils.WriteJson(w, http.StatusOK, map[string]interface{}{
+		"projects": projects,
+		"message":  "Projects for " + userId,
+	})
+
+}
+
+func (h *Handler) getProject(w http.ResponseWriter, r *http.Request) {
+	vars:=mux.Vars(r)
+	projectId:=vars["id"]
+	if projectId == ""{
+		utils.WriteJson(w, http.StatusBadRequest, map[string]string{
+			"error": "No valid ID Found!",
+		})
+		return
+	}
+
+	project, err := h.Store.GetProjectBYId(projectId)
+	if err != nil {
+		utils.WriteJson(w, http.StatusBadRequest, map[string]string{
+			"error": "failed to fetch projects",
+		})
+		return
+	}
+
+	utils.WriteJson(w, http.StatusOK, map[string]interface{}{
+		"project": project,
+		"message":  "Project Fetched!",
+	})
+
+}
+
+func (h *Handler) editProject(w http.ResponseWriter, r *http.Request) {
+	//1.get id from url
+	vars:=mux.Vars(r)
+	projectId:=vars["id"]
+	if projectId == ""{
+		utils.WriteJson(w, http.StatusBadRequest, map[string]string{
+			"error": "No valid ID Found!",
+		})
+		return
+	}
+	//2 get payload 
+	var payload types.UpdateProjectPayload
+	if err := utils.DecodePayload(r, &payload); err != nil {
+		utils.WriteJson(w, http.StatusBadRequest, map[string]string{"err": "Encountered an error in Validation"})
+		return
+	}
+	//3 callDB
+	project, err := h.Store.UpdateProject(projectId,payload)
+	if err != nil {
+		utils.WriteJson(w, http.StatusInternalServerError, err)
+		// 	map[string]string{
+		// 	"error": "Error While Updating Project",
+		// })
+		return
+	}
+
+	utils.WriteJson(w, http.StatusOK, map[string]interface{}{
+		"project": project,
+		"message":  "Project Updated!",
+	})
+}
+
+func (h *Handler) deleteProject(w http.ResponseWriter, r *http.Request) {
+
+}

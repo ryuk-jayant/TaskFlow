@@ -1,0 +1,21 @@
+package utils
+
+import (
+	"encoding/json"
+	"fmt"
+	"net/http"
+)
+
+func DecodePayload(r *http.Request,payload any) error{
+	if r.Body==nil{
+		return fmt.Errorf("MISSING REQUEST BODY!")
+	}
+	return json.NewDecoder(r.Body).Decode(payload)
+}
+
+func WriteJson(w http.ResponseWriter,status int,v any) error{
+	w.Header().Add("Content-Type","application/json")
+	w.WriteHeader(status)
+
+	return json.NewEncoder(w).Encode(v)
+}

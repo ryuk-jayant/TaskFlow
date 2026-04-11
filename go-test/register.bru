@@ -1,0 +1,19 @@
+meta {
+  name: register
+  type: http
+  seq: 1
+}
+
+post {
+  url: 127.0.0.1:9020/api/v1/register
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "Name":"newuser",
+    "email":"jkj@gmail.com",
+    "password":"Pass@123"
+  }
+}

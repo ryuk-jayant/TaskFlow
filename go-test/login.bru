@@ -1,0 +1,19 @@
+meta {
+  name: login
+  type: http
+  seq: 2
+}
+
+post {
+  url: 127.0.0.1:9020/api/v1/login
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "email":"jkj@pmail.com",
+    "password":"Pass@123",
+    "sdsa":"asd"
+  }
+}

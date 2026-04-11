@@ -1,0 +1,22 @@
+meta {
+  name: add-project
+  type: http
+  seq: 3
+}
+
+post {
+  url: 127.0.0.1:9020/api/v1/projects/
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImprakBwbWFpbC5jb20iLCJleHAiOjE3NzU5Mzg0MDYsInVzZXJJZCI6IjY0MTM1ZDIxLWUwNjAtNGFmNS1hOTRjLTFkNWZhN2Q5ZjRiNiJ9.PYTW28H-5w7Dc6gtCQo-bzldKKnWb0zlwcSXHgvlGmc
+}
+
+body:json {
+  {
+    "Name":"Proj-2",
+    "Description":"I am very bad at descriptions"
+  }
+}

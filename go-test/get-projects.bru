@@ -1,0 +1,15 @@
+meta {
+  name: get-projects
+  type: http
+  seq: 4
+}
+
+get {
+  url: 127.0.0.1:9020/api/v1/projects/
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImprakBwbWFpbC5jb20iLCJleHAiOjE3NzU5Mzg0MDYsInVzZXJJZCI6IjY0MTM1ZDIxLWUwNjAtNGFmNS1hOTRjLTFkNWZhN2Q5ZjRiNiJ9.PYTW28H-5w7Dc6gtCQo-bzldKKnWb0zlwcSXHgvlGmc
+}

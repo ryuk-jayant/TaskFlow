@@ -42,6 +42,7 @@ type StoreProject interface {
 	GetProjectBYOwner(id string) (*[]Project, error)
 	CreateProject(*Project) error
 	UpdateProject(projectId string,payload UpdateProjectPayload)(*Project,error)
+	DeleteProject(projectId string,userId string)(error)
 }
 
 type Project struct {

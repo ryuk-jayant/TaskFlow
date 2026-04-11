@@ -31,11 +31,11 @@ func (h *Handler) RegisterRoutes(router *mux.Router) {
 	secret := []byte("MysecretNeedToStoreInEn3") //TODO:ADD SECRET TO ENV
 	protected := router.PathPrefix("/projects").Subrouter()
 	protected.Use(middleware.JWTMiddleware(secret))
-	protected.HandleFunc("/", h.addProject).Methods("POST")       //add project
-	protected.HandleFunc("/", h.getAllProjects).Methods("GET")    //get all projects of user
-	protected.HandleFunc("/{id}", h.getProject).Methods("GET")     //get all project by id
-	protected.HandleFunc("/{id}", h.editProject).Methods("PUT")    //modify a project by id
-	protected.HandleFunc("/{id}", h.editProject).Methods("DELETE") //delete a project and all the tasks in it
+	protected.HandleFunc("/", h.addProject).Methods("POST")          //add project
+	protected.HandleFunc("/", h.getAllProjects).Methods("GET")       //get all projects of user
+	protected.HandleFunc("/{id}", h.getProject).Methods("GET")       //get all project by id
+	protected.HandleFunc("/{id}", h.editProject).Methods("PUT")      //modify a project by id
+	protected.HandleFunc("/{id}", h.deleteProject).Methods("DELETE") //delete a project and all the tasks in it
 }
 
 func (h *Handler) addProject(w http.ResponseWriter, r *http.Request) {
@@ -52,7 +52,7 @@ func (h *Handler) addProject(w http.ResponseWriter, r *http.Request) {
 	//2 check if project is non unique
 	_, err := h.Store.GetProjectBYName(payload.Name, userId)
 	if err == nil {
-		err := Error{Err: "", Message: "Project with " + payload.Name + " Exists", Code: http.StatusConflict}
+		err := Error{Err: "", Message: "Project with " + payload.Name + " Name Exists", Code: http.StatusConflict}
 		errJson, _ := json.Marshal(err)
 		http.Error(w, string(errJson), http.StatusConflict)
 		return
@@ -65,10 +65,10 @@ func (h *Handler) addProject(w http.ResponseWriter, r *http.Request) {
 	ProjectInsertion.Description = payload.Description
 	ProjectInsertion.Owner_id = userId
 	//4
-	log.Println("Adding project for ",userId)
+	log.Println("Creating project for ", userId)
 	err = h.Store.CreateProject(&ProjectInsertion)
 	if err != nil {
-		utils.WriteJson(w, http.StatusFailedDependency, err)
+		utils.WriteJson(w, http.StatusFailedDependency, map[string]string{"error": "Error Creating Project!"})
 		return
 	}
 
@@ -100,9 +100,9 @@ func (h *Handler) getAllProjects(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) getProject(w http.ResponseWriter, r *http.Request) {
-	vars:=mux.Vars(r)
-	projectId:=vars["id"]
-	if projectId == ""{
+	vars := mux.Vars(r)
+	projectId := vars["id"]
+	if projectId == "" {
 		utils.WriteJson(w, http.StatusBadRequest, map[string]string{
 			"error": "No valid ID Found!",
 		})
@@ -119,43 +119,65 @@ func (h *Handler) getProject(w http.ResponseWriter, r *http.Request) {
 
 	utils.WriteJson(w, http.StatusOK, map[string]interface{}{
 		"project": project,
-		"message":  "Project Fetched!",
+		"message": "Project Fetched!",
 	})
 
 }
 
 func (h *Handler) editProject(w http.ResponseWriter, r *http.Request) {
 	//1.get id from url
-	vars:=mux.Vars(r)
-	projectId:=vars["id"]
-	if projectId == ""{
+	vars := mux.Vars(r)
+	projectId := vars["id"]
+	if projectId == "" {
 		utils.WriteJson(w, http.StatusBadRequest, map[string]string{
 			"error": "No valid ID Found!",
 		})
 		return
 	}
-	//2 get payload 
+	//2 get payload
 	var payload types.UpdateProjectPayload
 	if err := utils.DecodePayload(r, &payload); err != nil {
 		utils.WriteJson(w, http.StatusBadRequest, map[string]string{"err": "Encountered an error in Validation"})
 		return
 	}
 	//3 callDB
-	project, err := h.Store.UpdateProject(projectId,payload)
+	project, err := h.Store.UpdateProject(projectId, payload)
 	if err != nil {
-		utils.WriteJson(w, http.StatusInternalServerError, err)
-		// 	map[string]string{
-		// 	"error": "Error While Updating Project",
-		// })
+		utils.WriteJson(w, http.StatusInternalServerError,
+			map[string]string{
+				"error": "Error While Updating Project",
+			})
 		return
 	}
 
 	utils.WriteJson(w, http.StatusOK, map[string]interface{}{
 		"project": project,
-		"message":  "Project Updated!",
+		"message": "Project Updated!",
 	})
 }
 
 func (h *Handler) deleteProject(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	projectId := vars["id"]
+	if projectId == "" {
+		utils.WriteJson(w, http.StatusBadRequest, map[string]string{
+			"error": "No valid ID Found!",
+		})
+		return
+	}
+	userId, ok := r.Context().Value("userId").(string)
+	if !ok {
+		utils.WriteJson(w, http.StatusUnauthorized, map[string]string{
+			"error": "unauthorized",
+		})
+		return
+	}
 
+	err := h.Store.DeleteProject(projectId, userId)
+	if err != nil {
+		utils.WriteJson(w, http.StatusFailedDependency, map[string]string{"Error": "Error Deleting Project!"})
+		return
+	}
+
+	utils.WriteJson(w, http.StatusAccepted, map[string]string{"Message": "Project Deleted !"})
 }

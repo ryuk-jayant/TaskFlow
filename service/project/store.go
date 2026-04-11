@@ -4,7 +4,7 @@ import (
 	"database/sql"
 	"example/web-service-gin/types"
 	"fmt"
-	"log"
+	// "log"
 	"strings"
 )
 
@@ -160,8 +160,8 @@ func (s *Store) UpdateProject(projectId string, payload types.UpdateProjectPaylo
 	query += " OUTPUT INSERTED.id, INSERTED.name, INSERTED.description, INSERTED.created_at"
 	query += fmt.Sprintf(" WHERE id= @p%d", i)
 	args = append(args, projectId)
-	log.Println("Query:",query)
-	log.Println("args:",args)
+	// log.Println("Query:", query)
+	// log.Println("args:", args)
 	row := s.db.QueryRow(query, args...)
 	p := new(types.Project)
 	err := row.Scan(
@@ -175,4 +175,24 @@ func (s *Store) UpdateProject(projectId string, payload types.UpdateProjectPaylo
 	}
 
 	return p, nil
+}
+
+func (s *Store) DeleteProject(projectId string, userId string) error {
+	// project,err:=s.GetProjectBYId(projectId)
+	// if err!=nil{
+	// 	return fmt.Errorf("Error while fetching Project!")
+	// }
+	// if project.Owner_id!=userId{
+	// 	return fmt.Errorf("Not owner of Project!")
+	// }
+	query := `DELETE FROM Project WHERE id= @p1 AND owner_id=@p2`
+
+	_, err := s.db.Exec(
+		query,
+		projectId,
+		userId,
+	)
+
+	return err
+
 }

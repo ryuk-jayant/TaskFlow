@@ -1,10 +1,10 @@
 meta {
-  name: update-project
+  name: Delete-project
   type: http
-  seq: 5
+  seq: 6
 }
 
-put {
+delete {
   url: 127.0.0.1:9020/api/v1/projects/b218b435-aade-4df2-a1dd-b6e88c36d1fa
   body: json
   auth: bearer
@@ -12,10 +12,4 @@ put {
 
 auth:bearer {
   token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImprakBwbWFpbC5jb20iLCJleHAiOjE3NzU5NDIwODMsInVzZXJJZCI6IjY0MTM1ZDIxLWUwNjAtNGFmNS1hOTRjLTFkNWZhN2Q5ZjRiNiJ9.c6u2syO3Oc_Z9nL3XdPmMHcQFN06RO4hnMawZkKHf20
-}
-
-body:json {
-  {
-    "Name":"Jaya"
-  }
 }

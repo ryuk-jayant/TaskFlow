@@ -14,7 +14,8 @@ import (
 )
 
 type Handler struct {
-	Store types.StoreProject
+	PStore types.StoreProject
+	SStore types.StoreTask
 }
 
 type Error struct {
@@ -23,8 +24,8 @@ type Error struct {
 	Code    int
 }
 
-func NewHandler(store types.StoreProject) *Handler {
-	return &Handler{Store: store}
+func NewHandler(projectstore types.StoreProject, taskstore types.StoreTask) *Handler {
+	return &Handler{PStore: projectstore, SStore: taskstore}
 }
 
 func (h *Handler) RegisterRoutes(router *mux.Router) {
@@ -36,6 +37,12 @@ func (h *Handler) RegisterRoutes(router *mux.Router) {
 	protected.HandleFunc("/{id}", h.getProject).Methods("GET")       //get all project by id
 	protected.HandleFunc("/{id}", h.editProject).Methods("PUT")      //modify a project by id
 	protected.HandleFunc("/{id}", h.deleteProject).Methods("DELETE") //delete a project and all the tasks in it
+	// -------------------------------------------------------------------------
+	//Task APIS
+	protected.HandleFunc("/:id/tasks",h.listTasks).Methods("GET") //list tasks
+	protected.HandleFunc("/:id/tasks",h.addTask).Methods("POST") //Create a task
+	protected.HandleFunc("/:id/tasks",h.listTasks).Methods("PUT") //Update title, description, status, priority, assignee, due_date
+	protected.HandleFunc("/:id/tasks",h.listTasks).Methods("DELETE") //Delete task
 }
 
 func (h *Handler) addProject(w http.ResponseWriter, r *http.Request) {
@@ -50,7 +57,7 @@ func (h *Handler) addProject(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	//2 check if project is non unique
-	_, err := h.Store.GetProjectBYName(payload.Name, userId)
+	_, err := h.PStore.GetProjectBYName(payload.Name, userId)
 	if err == nil {
 		err := Error{Err: "", Message: "Project with " + payload.Name + " Name Exists", Code: http.StatusConflict}
 		errJson, _ := json.Marshal(err)
@@ -66,7 +73,7 @@ func (h *Handler) addProject(w http.ResponseWriter, r *http.Request) {
 	ProjectInsertion.Owner_id = userId
 	//4
 	log.Println("Creating project for ", userId)
-	err = h.Store.CreateProject(&ProjectInsertion)
+	err = h.PStore.CreateProject(&ProjectInsertion)
 	if err != nil {
 		utils.WriteJson(w, http.StatusFailedDependency, map[string]string{"error": "Error Creating Project!"})
 		return
@@ -84,7 +91,7 @@ func (h *Handler) getAllProjects(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	projects, err := h.Store.GetProjectBYOwner(userId)
+	projects, err := h.PStore.GetProjectBYOwner(userId)
 	if err != nil {
 		utils.WriteJson(w, http.StatusInternalServerError, map[string]string{
 			"error": "failed to fetch projects",
@@ -109,7 +116,7 @@ func (h *Handler) getProject(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	project, err := h.Store.GetProjectBYId(projectId)
+	project, err := h.PStore.GetProjectBYId(projectId)
 	if err != nil {
 		utils.WriteJson(w, http.StatusBadRequest, map[string]string{
 			"error": "failed to fetch projects",
@@ -141,7 +148,7 @@ func (h *Handler) editProject(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	//3 callDB
-	project, err := h.Store.UpdateProject(projectId, payload)
+	project, err := h.PStore.UpdateProject(projectId, payload)
 	if err != nil {
 		utils.WriteJson(w, http.StatusInternalServerError,
 			map[string]string{
@@ -173,11 +180,24 @@ func (h *Handler) deleteProject(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err := h.Store.DeleteProject(projectId, userId)
+	err := h.PStore.DeleteProject(projectId, userId)
 	if err != nil {
 		utils.WriteJson(w, http.StatusFailedDependency, map[string]string{"Error": "Error Deleting Project!"})
 		return
 	}
 
 	utils.WriteJson(w, http.StatusAccepted, map[string]string{"Message": "Project Deleted !"})
+}
+
+func (h* Handler) addTask(w http.ResponseWriter, r *http.Request){
+
+}
+func (h* Handler) listTasks(w http.ResponseWriter, r *http.Request){
+
+}
+func (h* Handler) updateTask(w http.ResponseWriter, r *http.Request){
+
+}
+func (h* Handler) deleteTask(w http.ResponseWriter, r *http.Request){
+
 }

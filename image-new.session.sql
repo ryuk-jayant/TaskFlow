@@ -5,6 +5,7 @@
 USE GOTask;
 GO
 
+
 SELECT * FROM Project;
 GO
 -- Tasks Table

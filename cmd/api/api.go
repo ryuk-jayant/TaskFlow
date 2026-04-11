@@ -3,6 +3,7 @@ package api
 import (
 	"context"
 	"database/sql"
+	"example/web-service-gin/service/Task"
 	"example/web-service-gin/service/project"
 	"example/web-service-gin/service/user"
 	"log"
@@ -37,10 +38,9 @@ func NewApiServer(addr string, db *sql.DB) *ApiServer {
 // 	projectRoutes:=project.NewHandler(projectStore)
 // 	projectRoutes.RegisterRoutes(subRouter)
 
-
-// 	log.Printf("Server running on %v \n", s.Addr)
-// 	return http.ListenAndServe(s.Addr, router)
-// }
+//		log.Printf("Server running on %v \n", s.Addr)
+//		return http.ListenAndServe(s.Addr, router)
+//	}
 func (s *ApiServer) Run() error {
 	router := mux.NewRouter()
 	subRouter := router.PathPrefix("/api/v1").Subrouter()
@@ -50,7 +50,8 @@ func (s *ApiServer) Run() error {
 	userRoutes.RegisterRoutes(subRouter)
 
 	projectStore := project.NewStore(s.db)
-	projectRoutes := project.NewHandler(projectStore)
+	taskStore := Task.NewStore(s.db)
+	projectRoutes := project.NewHandler(projectStore, taskStore)
 	projectRoutes.RegisterRoutes(subRouter)
 
 	// Create server instance

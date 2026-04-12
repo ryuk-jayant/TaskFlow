@@ -65,11 +65,15 @@ type UpdateProjectPayload struct {
 // Task
 type StoreTask interface {
 	GetTaskBYId(name string) (*Task, error)
-	GetTaskBYName(name string, id string) (*Task, error)
-	GetTaskBYOwner(id string) (*[]Task, error)
+	GetTaskBYName(name string,projectId string) (*Task, error)
+	GetTaskBYProject(id string,payload GetTaskQueryFilters) (*[]Task, error)
 	CreateTask(*Task) error
 	UpdateTask(projectId string, payload any) (*Task, error)
 	DeleteTask(projectId string, userId string) error
+}
+type GetTaskQueryFilters struct{
+	Status *string `json:"Status"`
+	AssigneeId *string `json:"AssigneeId"`
 }
 type Task struct {
 	Id          uuid.UUID `json:"id"`
@@ -82,4 +86,14 @@ type Task struct {
 	DueDate     time.Time `json:"due_date"`
 	Updated_at  time.Time `json:"updated_at"`
 	Created_at  time.Time `json:"created_at"`
+}
+
+type NewTaskPayload struct {
+	Title       string    `json:"Name" validate:"required"`
+	Description string    `json:"Description"`
+	Status      string    `json:"status"`
+	Priority    string    `json:"priority"`
+	ProjectId   string    `json:"project_id"`
+	AssigneeId  string    `json:"assignee_id"`
+	DueDate     time.Time `json:"due_date"`
 }

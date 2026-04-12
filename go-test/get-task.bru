@@ -1,0 +1,27 @@
+meta {
+  name: get-task
+  type: http
+  seq: 8
+}
+
+post {
+  url: 127.0.0.1:9020/api/v1/projects/cdc3a24a-f5cf-4955-8732-08241de0ec71/tasks
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImprakBwbWFpbC5jb20iLCJleHAiOjE3NzU5OTg3MTgsInVzZXJJZCI6IjY0MTM1ZDIxLWUwNjAtNGFmNS1hOTRjLTFkNWZhN2Q5ZjRiNiJ9.HsKdImR6TsIjD4Zk2FNPZlwgaYAoC6uY2OXM1f2G-4M
+}
+
+body:json {
+  {
+    "Name":"Task1",
+    "Description":"This Task is critical",
+    "status":"todo",
+    "priority":"high",
+    "project_id":"cdc3a24a-f5cf-4955-8732-08241de0ec71",
+    "assignee_id":"123",
+    "due_date":"2026-04-12T02:27:23.3567514Z"
+  }
+}

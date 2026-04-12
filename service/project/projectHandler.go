@@ -40,10 +40,10 @@ func (h *Handler) RegisterRoutes(router *mux.Router) {
 	protected.HandleFunc("/{id}", h.deleteProject).Methods("DELETE") //delete a project and all the tasks in it
 	// -------------------------------------------------------------------------
 	//Task APIS
-	protected.HandleFunc("/:id/tasks", h.listTasks).Methods("GET")    //list tasks
-	protected.HandleFunc("/:id/tasks", h.addTask).Methods("POST")     //Create a task
-	protected.HandleFunc("/:id/tasks", h.listTasks).Methods("PUT")    //Update title, description, status, priority, assignee, due_date
-	protected.HandleFunc("/:id/tasks", h.listTasks).Methods("DELETE") //Delete task
+	protected.HandleFunc("/{id}/tasks", h.listTasks).Methods("GET")     //list tasks
+	protected.HandleFunc("/{id}/tasks", h.addTask).Methods("POST")      //Create a task
+	protected.HandleFunc("/{id}/tasks", h.updateTask).Methods("PUT")    //Update title, description, status, priority, assignee, due_date
+	protected.HandleFunc("/{id}/tasks", h.deleteTask).Methods("DELETE") //Delete task
 }
 
 func (h *Handler) addProject(w http.ResponseWriter, r *http.Request) {
@@ -191,10 +191,78 @@ func (h *Handler) deleteProject(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) addTask(w http.ResponseWriter, r *http.Request) {
+	//0 context extraction
+	userId := r.Context().Value("userId").(string)
+	//1 payload
+	var payload types.NewTaskPayload
+	if err := utils.DecodePayload(r, &payload); err != nil {
+		utils.WriteJson(w, http.StatusBadRequest, map[string]string{"err": "Encountered an error"})
+		return
+	}
+	//2 check if Task is non unique
+	_, err := h.SStore.GetTaskBYName(payload.Title, payload.ProjectId)
+	if err == nil {
+		err := Error{Err: "", Message: "Task with Title '" + payload.Title + "' Exists in Project " + payload.ProjectId, Code: http.StatusConflict}
+		errJson, _ := json.Marshal(err)
+		http.Error(w, string(errJson), http.StatusConflict)
+		return
+	}
+	var TaskInsertion types.Task
+	TaskInsertion.Id = uuid.New()
+	TaskInsertion.Created_at = time.Now()
+	TaskInsertion.Updated_at = time.Now()
+	TaskInsertion.Title = payload.Title
+	TaskInsertion.Description = payload.Description
+	TaskInsertion.ProjectId = payload.ProjectId
+	TaskInsertion.Status = payload.Status
+	TaskInsertion.Priority = payload.Priority
+	TaskInsertion.AssigneeId = userId
+	//4
+	log.Println("Creating Task for user:", userId, "project:", payload.ProjectId)
+	err = h.SStore.CreateTask(&TaskInsertion)
+	if err != nil {
+		utils.WriteJson(w, http.StatusFailedDependency, map[string]string{"error": "Error Creating Task!"})
+		return
+	}
+
+	utils.WriteJson(w, http.StatusAccepted, map[string]string{"Message": "Task added to Project!"})
 
 }
 func (h *Handler) listTasks(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	projectId := vars["id"]
+	if projectId == "" {
+		utils.WriteJson(w, http.StatusBadRequest, map[string]string{
+			"error": "No valid ID Found!",
+		})
+		return
+	}
 
+	query:=r.URL.Query()
+	status:=query.Get("status")
+	assigneeId:=query.Get("assignee")
+
+	// log.Println("Query:",query)
+	
+	var filter types.GetTaskQueryFilters
+	if status!=""{filter.Status=&status}
+	if assigneeId!=""{filter.AssigneeId=&assigneeId}
+
+	// log.Println("Filter:",filter)
+
+	projects, err := h.SStore.GetTaskBYProject(projectId,filter)
+	if err != nil {
+		utils.WriteJson(w, http.StatusBadRequest, 
+			map[string]string{
+			"error": "failed to fetch Tasks",
+		})
+		return
+	}
+
+	utils.WriteJson(w, http.StatusOK, map[string]interface{}{
+		"Tasks": projects,
+		"message":  "Tasks In Project " + projectId,
+	})
 }
 func (h *Handler) updateTask(w http.ResponseWriter, r *http.Request) {
 

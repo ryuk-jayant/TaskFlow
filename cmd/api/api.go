@@ -53,6 +53,9 @@ func (s *ApiServer) Run() error {
 	taskStore := Task.NewStore(s.db)
 	projectRoutes := project.NewHandler(projectStore, taskStore)
 	projectRoutes.RegisterRoutes(subRouter)
+	router.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
+    w.Write([]byte("OK"))
+	})
 
 	// Create server instance
 	server := &http.Server{

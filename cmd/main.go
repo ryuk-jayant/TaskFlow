@@ -13,7 +13,7 @@ import (
 )
 
 func main() {
-	// config.InitEnv()//for local env
+	config.InitEnv()//for local env
 	// log.Println("DB_HOST:", os.Getenv("DB_HOST"))
 	log.Println("DB_PORT:", os.Getenv("DB_PORT"))
 	user := config.GetEnv("DB_USER", "fall")
@@ -48,7 +48,7 @@ func main() {
 	}
 
 	log.Println("Connected to SQL Server!")
-	server := api.NewApiServer("localhost:8080", DB)
+	server := api.NewApiServer(":8080", DB)
 	if err := server.Run(); err != nil {
 		log.Fatal("Server Stopped")
 	}

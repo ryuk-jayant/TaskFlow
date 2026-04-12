@@ -2,6 +2,7 @@ package project
 
 import (
 	"encoding/json"
+	"example/web-service-gin/cmd/config"
 	"example/web-service-gin/service/middleware"
 	"example/web-service-gin/types"
 	"example/web-service-gin/utils"
@@ -29,7 +30,7 @@ func NewHandler(projectstore types.StoreProject, taskstore types.StoreTask) *Han
 }
 
 func (h *Handler) RegisterRoutes(router *mux.Router) {
-	secret := []byte("MysecretNeedToStoreInEn3") //TODO:ADD SECRET TO ENV
+	secret := []byte(config.GetEnv("Secret", "fallb1ckSecretPassw0r4")) //TODO:ADD SECRET TO ENV
 	protected := router.PathPrefix("/projects").Subrouter()
 	protected.Use(middleware.JWTMiddleware(secret))
 	protected.HandleFunc("/", h.addProject).Methods("POST")          //add project
@@ -39,10 +40,10 @@ func (h *Handler) RegisterRoutes(router *mux.Router) {
 	protected.HandleFunc("/{id}", h.deleteProject).Methods("DELETE") //delete a project and all the tasks in it
 	// -------------------------------------------------------------------------
 	//Task APIS
-	protected.HandleFunc("/:id/tasks",h.listTasks).Methods("GET") //list tasks
-	protected.HandleFunc("/:id/tasks",h.addTask).Methods("POST") //Create a task
-	protected.HandleFunc("/:id/tasks",h.listTasks).Methods("PUT") //Update title, description, status, priority, assignee, due_date
-	protected.HandleFunc("/:id/tasks",h.listTasks).Methods("DELETE") //Delete task
+	protected.HandleFunc("/:id/tasks", h.listTasks).Methods("GET")    //list tasks
+	protected.HandleFunc("/:id/tasks", h.addTask).Methods("POST")     //Create a task
+	protected.HandleFunc("/:id/tasks", h.listTasks).Methods("PUT")    //Update title, description, status, priority, assignee, due_date
+	protected.HandleFunc("/:id/tasks", h.listTasks).Methods("DELETE") //Delete task
 }
 
 func (h *Handler) addProject(w http.ResponseWriter, r *http.Request) {
@@ -189,15 +190,15 @@ func (h *Handler) deleteProject(w http.ResponseWriter, r *http.Request) {
 	utils.WriteJson(w, http.StatusAccepted, map[string]string{"Message": "Project Deleted !"})
 }
 
-func (h* Handler) addTask(w http.ResponseWriter, r *http.Request){
+func (h *Handler) addTask(w http.ResponseWriter, r *http.Request) {
 
 }
-func (h* Handler) listTasks(w http.ResponseWriter, r *http.Request){
+func (h *Handler) listTasks(w http.ResponseWriter, r *http.Request) {
 
 }
-func (h* Handler) updateTask(w http.ResponseWriter, r *http.Request){
+func (h *Handler) updateTask(w http.ResponseWriter, r *http.Request) {
 
 }
-func (h* Handler) deleteTask(w http.ResponseWriter, r *http.Request){
+func (h *Handler) deleteTask(w http.ResponseWriter, r *http.Request) {
 
 }

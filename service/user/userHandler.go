@@ -2,6 +2,7 @@ package user
 
 import (
 	"encoding/json"
+	"example/web-service-gin/cmd/config"
 	"example/web-service-gin/service/auth"
 	"example/web-service-gin/types"
 	"example/web-service-gin/utils"
@@ -58,7 +59,7 @@ func (h *Handler) loginHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	//4 JWT Token
-	secret := []byte("MysecretNeedToStoreInEn3") //TODO:ADD SECRET TO ENV
+	secret := []byte(config.GetEnv("Secret", "fallb1ckSecretPassw0r4")) //TODO:ADD SECRET TO ENV
 	log.Println("UserId:", user)
 	token, err := auth.CreateJWT(secret, user.Id.String(), user.Email)
 	if err != nil {

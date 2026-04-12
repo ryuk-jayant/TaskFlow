@@ -3,33 +3,21 @@ package main
 import (
 	"database/sql"
 	"example/web-service-gin/cmd/api"
+	"example/web-service-gin/cmd/config"
 	"fmt"
 	"log"
-	"os"
 	"time"
 
-	"github.com/joho/godotenv"
 	_ "github.com/microsoft/go-mssqldb"
 )
 
-func InitEnv() {
-	if err := godotenv.Load(".env"); err != nil {
-		log.Println("No .env file found")
-	}
-}
 
-func GetEnv(key, fallback string) string {
-	if value := os.Getenv(key); value != "" {
-		return value
-	}
-	return fallback
-}
 func main() {
-
-	user := GetEnv("User", "sa")
-	passwd := GetEnv("Passwd", "YourStrong!Passw0rd")
-	addr := GetEnv("Addr", "127.0.0.1:1433")
-	dbName := GetEnv("DBName", "GOTask")
+	config.InitEnv()
+	user := config.GetEnv("User","fall")
+	passwd := config.GetEnv("Passwd", "fallbackPassw0rd")
+	addr := config.GetEnv("Addr", "localhost")
+	dbName := config.GetEnv("DBName", "GOTask")
 
 	log.Println("Config:", user, dbName)
 	log.Println("Connecting to SQL Server...")

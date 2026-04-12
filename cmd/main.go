@@ -6,18 +6,20 @@ import (
 	"example/web-service-gin/cmd/config"
 	"fmt"
 	"log"
+	"os"
 	"time"
 
 	_ "github.com/microsoft/go-mssqldb"
 )
 
-
 func main() {
-	config.InitEnv()
-	user := config.GetEnv("User","fall")
-	passwd := config.GetEnv("Passwd", "fallbackPassw0rd")
-	addr := config.GetEnv("Addr", "localhost")
-	dbName := config.GetEnv("DBName", "GOTask")
+	// config.InitEnv()//for local env
+	// log.Println("DB_HOST:", os.Getenv("DB_HOST"))
+	log.Println("DB_PORT:", os.Getenv("DB_PORT"))
+	user := config.GetEnv("DB_USER", "fall")
+	passwd := config.GetEnv("DB_PASSWORD", "fallbackPassw0rd")
+	addr := config.GetEnv("DB_ADRR", "localhost")
+	dbName := config.GetEnv("DB_NAME", "GOTask")
 
 	log.Println("Config:", user, dbName)
 	log.Println("Connecting to SQL Server...")
@@ -26,7 +28,7 @@ func main() {
 		"sqlserver://%s:%s@%s?database=%s",
 		user,
 		passwd,
-		addr, // example: localhost:1433
+		addr,
 		dbName,
 	)
 
@@ -46,7 +48,7 @@ func main() {
 	}
 
 	log.Println("Connected to SQL Server!")
-	server := api.NewApiServer("localhost:9020", DB)
+	server := api.NewApiServer("localhost:8080", DB)
 	if err := server.Run(); err != nil {
 		log.Fatal("Server Stopped")
 	}

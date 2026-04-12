@@ -1,0 +1,31 @@
+version: "3.8"
+
+services:
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    environment:
+      ACCEPT_EULA: "Y"
+      MSSQL_SA_PASSWORD: "YourStrong!Passw0rd"
+    ports:
+      - "9010:1433" # 👈 avoid conflict with existing SQL Server
+    volumes:
+      - sqlserverdata:/var/opt/mssql
+    networks:
+      - app-network
+
+  backend:
+    build: .
+    ports:
+      - "9020:8080"
+    depends_on:
+      - sqlserver
+    environment:
+      #Add the Enviornment Variables accordingly refer .example.env
+    networks:
+      - app-network
+
+volumes:
+  sqlserverdata:
+
+networks:
+  app-network:

@@ -5,6 +5,7 @@ import (
 	"example/web-service-gin/types"
 	"fmt"
 	"log"
+	"strings"
 )
 
 type Store struct {
@@ -160,9 +161,88 @@ func (s *Store) CreateTask(t *types.Task) error {
 
 	return err
 }
-func (s *Store) UpdateTask(projectId string, payload any) (*types.Task, error) {
-	return nil, nil
-}
-func (s *Store) DeleteTask(projectId string, userId string) error {
+func (s *Store) UpdateTask(taskID string, payload types.UpdateTaskPayload) (error) {
+	query := "UPDATE Task SET "
+	args := []interface{}{}
+	i := 1
+
+	setClauses := []string{}
+
+	if payload.Title != nil {
+		setClauses = append(setClauses, fmt.Sprintf("title=@p%d", i))
+		args = append(args, *payload.Title)
+		i++
+	}
+
+	if payload.Description != nil {
+		setClauses = append(setClauses, fmt.Sprintf("description=@p%d", i))
+		args = append(args, *payload.Description)
+		i++
+	}
+
+	if payload.Status != nil {
+		setClauses = append(setClauses, fmt.Sprintf("status=@p%d", i))
+		args = append(args, *payload.Status)
+		i++
+	}
+
+	if payload.Priority != nil {
+		setClauses = append(setClauses, fmt.Sprintf("priority=@p%d", i))
+		args = append(args, *payload.Priority)
+		i++
+	}
+
+	if payload.AssigneeId != nil {
+		setClauses = append(setClauses, fmt.Sprintf("assignee_id=@p%d", i))
+		args = append(args, *payload.AssigneeId)
+		i++
+	}
+
+	if payload.DueDate != nil {
+		setClauses = append(setClauses, fmt.Sprintf("due_date=@p%d", i))
+		args = append(args, *payload.DueDate)
+		i++
+	}
+
+	// Always update updated_at
+	setClauses = append(setClauses, "updated_at=GETDATE()")
+
+	if len(setClauses) == 0 {
+		return fmt.Errorf("no fields to update")
+	}
+
+	query += strings.Join(setClauses, ", ")
+	query += fmt.Sprintf(" WHERE id=@p%d", i)
+
+	args = append(args, taskID)
+
+	log.Println("Update Query:", query)
+	log.Println("Args:", args)
+
+	result, err := s.db.Exec(query, args...)
+	if err != nil {
+		return err
+	}
+
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return err
+	}
+
+	if rowsAffected == 0 {
+		return fmt.Errorf("task not found")
+	}
+
 	return nil
+
+}
+func (s *Store) DeleteTask(taskId string) error {
+	query := `DELETE FROM Task WHERE id= @p1 `//project_id
+
+	_, err := s.db.Exec(
+		query,
+		taskId,
+	)
+
+	return err
 }

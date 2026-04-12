@@ -32,6 +32,7 @@ func NewHandler(projectstore types.StoreProject, taskstore types.StoreTask) *Han
 func (h *Handler) RegisterRoutes(router *mux.Router) {
 	secret := []byte(config.GetEnv("Secret", "fallb1ckSecretPassw0r4")) //TODO:ADD SECRET TO ENV
 	protected := router.PathPrefix("/projects").Subrouter()
+	taskProtected := router.PathPrefix("/tasks").Subrouter()
 	protected.Use(middleware.JWTMiddleware(secret))
 	protected.HandleFunc("/", h.addProject).Methods("POST")          //add project
 	protected.HandleFunc("/", h.getAllProjects).Methods("GET")       //get all projects of user
@@ -40,10 +41,10 @@ func (h *Handler) RegisterRoutes(router *mux.Router) {
 	protected.HandleFunc("/{id}", h.deleteProject).Methods("DELETE") //delete a project and all the tasks in it
 	// -------------------------------------------------------------------------
 	//Task APIS
-	protected.HandleFunc("/{id}/tasks", h.listTasks).Methods("GET")     //list tasks
-	protected.HandleFunc("/{id}/tasks", h.addTask).Methods("POST")      //Create a task
-	protected.HandleFunc("/{id}/tasks", h.updateTask).Methods("PUT")    //Update title, description, status, priority, assignee, due_date
-	protected.HandleFunc("/{id}/tasks", h.deleteTask).Methods("DELETE") //Delete task
+	protected.HandleFunc("/{id}/tasks", h.listTasks).Methods("GET")   //list tasks
+	protected.HandleFunc("/{id}/tasks", h.addTask).Methods("POST")    //Create a task
+	taskProtected.HandleFunc("/{id}", h.updateTask).Methods("PUT")    //Update title, description, status, priority, assignee, due_date
+	taskProtected.HandleFunc("/{id}", h.deleteTask).Methods("DELETE") //Delete task
 }
 
 func (h *Handler) addProject(w http.ResponseWriter, r *http.Request) {
@@ -238,35 +239,84 @@ func (h *Handler) listTasks(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	query:=r.URL.Query()
-	status:=query.Get("status")
-	assigneeId:=query.Get("assignee")
+	query := r.URL.Query()
+	status := query.Get("status")
+	assigneeId := query.Get("assignee")
 
 	// log.Println("Query:",query)
-	
+
 	var filter types.GetTaskQueryFilters
-	if status!=""{filter.Status=&status}
-	if assigneeId!=""{filter.AssigneeId=&assigneeId}
+	if status != "" {
+		filter.Status = &status
+	}
+	if assigneeId != "" {
+		filter.AssigneeId = &assigneeId
+	}
 
 	// log.Println("Filter:",filter)
 
-	projects, err := h.SStore.GetTaskBYProject(projectId,filter)
+	projects, err := h.SStore.GetTaskBYProject(projectId, filter)
 	if err != nil {
-		utils.WriteJson(w, http.StatusBadRequest, 
+		utils.WriteJson(w, http.StatusBadRequest,
 			map[string]string{
-			"error": "failed to fetch Tasks",
-		})
+				"error": "failed to fetch Tasks",
+			})
 		return
 	}
 
 	utils.WriteJson(w, http.StatusOK, map[string]interface{}{
-		"Tasks": projects,
-		"message":  "Tasks In Project " + projectId,
+		"Tasks":   projects,
+		"message": "Tasks In Project " + projectId,
 	})
 }
 func (h *Handler) updateTask(w http.ResponseWriter, r *http.Request) {
+	//1
+	vars := mux.Vars(r)
+	taskID := vars["id"]
 
+	var payload types.UpdateTaskPayload
+	//2
+	if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
+		utils.WriteJson(w, http.StatusBadRequest, map[string]string{
+			"error": "Invalid request body",
+		})
+		return
+	}
+
+	//3
+	err := h.SStore.UpdateTask(taskID, payload)
+	if err != nil {
+		log.Println("UpdateTask ERROR:", err)
+		utils.WriteJson(w, http.StatusInternalServerError, map[string]string{
+			"error": "Failed to Update Task"+taskID,
+		})
+		return
+	}
+	//4
+	utils.WriteJson(w, http.StatusAccepted, map[string]string{"Message": "Task updated successfully !"})
 }
 func (h *Handler) deleteTask(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	taskId := vars["id"]
+	if taskId == "" {
+		utils.WriteJson(w, http.StatusBadRequest, map[string]string{
+			"error": "No valid ID Found!",
+		})
+		return
+	}
+	// userId, ok := r.Context().Value("userId").(string)
+	// if !ok {
+	// 	utils.WriteJson(w, http.StatusUnauthorized, map[string]string{
+	// 		"error": "unauthorized",
+	// 	})
+	// 	return
+	// }
 
+	err := h.SStore.DeleteTask(taskId)
+	if err != nil {
+		utils.WriteJson(w, http.StatusFailedDependency, map[string]string{"Error": "Error Deleting Task!"})
+		return
+	}
+
+	utils.WriteJson(w, http.StatusAccepted, map[string]string{"Message": "Project Task !"})
 }

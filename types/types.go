@@ -68,8 +68,8 @@ type StoreTask interface {
 	GetTaskBYName(name string,projectId string) (*Task, error)
 	GetTaskBYProject(id string,payload GetTaskQueryFilters) (*[]Task, error)
 	CreateTask(*Task) error
-	UpdateTask(projectId string, payload any) (*Task, error)
-	DeleteTask(projectId string, userId string) error
+	UpdateTask(taskID string, payload UpdateTaskPayload) (error)
+	DeleteTask(projectId string) error
 }
 type GetTaskQueryFilters struct{
 	Status *string `json:"Status"`
@@ -86,6 +86,15 @@ type Task struct {
 	DueDate     time.Time `json:"due_date"`
 	Updated_at  time.Time `json:"updated_at"`
 	Created_at  time.Time `json:"created_at"`
+}
+
+type UpdateTaskPayload struct {
+	Title       *string    `json:"title"`
+	Description *string    `json:"description"`
+	Status      *string    `json:"status"`
+	Priority    *string    `json:"priority"`
+	AssigneeId  *string    `json:"assignee_id"`
+	DueDate     *time.Time `json:"due_date"`
 }
 
 type NewTaskPayload struct {

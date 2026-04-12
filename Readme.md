@@ -1,165 +1,171 @@
-# 🚀 Go Task Management API (Dockerized with SQL Server)
+# 📌 TaskFlow — Submission Justification & Notes
 
-A backend service built with **Go** for managing tasks, projects, and users.
-The application is fully containerized using **Docker** and uses **Microsoft SQL Server** as the database.
+## 1. Overview
 
----
+This project is my implementation of the **TaskFlow Engineering Home Assignment**, focused primarily on delivering a **complete, production-ready backend system** using Go, Docker, and SQL Server (adapted from PostgreSQL due to familiarity and setup constraints).
 
-## 🧱 Tech Stack
+The backend supports:
 
-* **Backend:** Go (Golang)
-* **Database:** Microsoft SQL Server
-* **Containerization:** Docker & Docker Compose
-* **Architecture:** Modular (cmd, service, types, utils)
+* Authentication (JWT-based)
+* Project and Task management
+* Filtering and relational data handling
+* Dockerized environment with persistent storage
 
----
-
-## 📁 Project Structure
-
-```
-.
-├── cmd/
-│   ├── api/        # Entry point (main.go)
-│   ├── config/     # Configuration handling
-│   ├── db/         # Database connection logic
-│   └── migrate/    # Migration scripts
-├── service/
-│   ├── auth/
-│   ├── middleware/
-│   ├── project/
-│   ├── task/
-│   └── user/
-├── types/          # Structs and models
-├── utils/          # Utility functions
-├── Dockerfile
-├── docker-compose.yml
-├── go.mod
-└── go.sum
-```
+While the assignment also includes a frontend requirement, this submission prioritizes **backend, architecture, and reliability**.
 
 ---
 
-## ⚙️ Features
+## 2. What Has Been Completed
 
-* Task CRUD operations
-* Project and user management
-* Filter tasks by:
+### ✅ Backend (Fully Implemented)
 
-  * Status
-  * Assignee
-  * Project
-* SQL Server integration
-* Dockerized environment
-* Environment-based configuration
+All core backend requirements from the assignment have been completed:
 
----
+#### 🔐 Authentication
 
-## 🐳 Running the Application (Docker)
+* User registration and login endpoints
+* Password hashing using bcrypt
+* JWT-based authentication (24-hour expiry)
+* Protected routes using middleware
 
-### 1. Clone the repository
+#### 📦 Projects API
 
-```
-git clone <your-repo-url>
-cd <your-project>
-```
+* Create, fetch, update, and delete projects
+* Ownership validation (only owners can modify/delete)
+* Fetch project with associated tasks
 
----
+#### 📝 Tasks API
 
-### 2. Start services
+* Create, update, delete tasks
+* Dynamic filtering (status, assignee)
+* Partial updates supported (PATCH semantics)
+* Proper relational mapping with project and user
 
-```
-docker-compose up --build
-```
+#### 🧠 API Design
 
----
+* RESTful endpoints
+* Proper HTTP status codes (`200`, `201`, `400`, `401`, `403`, `404`, `500`)
+* Structured error responses
+* Clean separation of concerns (handler → service → store)
 
-### 3. Services
+#### 🗄️ Data Layer
 
-| Service     | URL                   |
-| ----------- | --------------------- |
-| Backend API | http://localhost:9020 |
-| SQL Server  | localhost:9010        |
+* Relational schema aligned with assignment requirements
+* Parameterized queries (safe from SQL injection)
+* Dynamic query building for filtering and updates
 
----
+#### 🐳 Docker & Dev Environment
 
-## 🔌 API Endpoints
-
-### Health Check
-
-```
-GET /health
-```
-
-Response:
-
-```
-OK
-```
-
+* Fully dockerized backend + database
+* Persistent database using volumes
+* Environment-driven configuration
+* Single command setup (`docker-compose up --build`)
 
 ---
 
-## 🗄️ Database Configuration
+## 3. What Is Missing (Frontend)
 
-The application connects using environment variables see .example.env:
+### ❌ Frontend (Not Completed)
 
-```
-DB_HOST=Your-sqlserver
-DB_PORT=1433
-DB_USER=Ryuk-Bhai
-DB_PASSWORD=YourPassw0rd
-DB_NAME=master
-```
+The frontend portion of the assignment has **not been implemented**.
 
+### Reason:
 
-## ⚠️ Important Notes
+Although I have backend experience, I am **very new to Go**, and a significant portion of the allotted time was spent on:
 
-* Do NOT use `localhost` as DB host inside Docker
-* Use `sqlserver` (service name) instead
-* SQL Server may take a few seconds to start — restart Go backend logic if required
----
+* Understanding Go Syntax and patterns
+* Debugging containerization and networking issues
+* Implementing a correct backend system
+* Ensuring proper API behavior and database interaction
 
-## 🧪 Development (Without Docker)
-
-```
-make run 
-```
-
-Make sure SQL Server is running locally and update `.env` accordingly.
+Rather than rushing a frontend implementation, I chose to **focus on delivering a solid backend**, as that aligns better with my current strengths.
 
 ---
 
-## 🛠️ Common Issues
+## 4. Engineering Decisions & Tradeoffs
 
-### 1. Connection refused
+### 🧠 Focus on Backend Depth Over Full Stack Breadth
 
-* Ensure SQL Server container is running
-* Check port mappings
-
-### 2. Socket hang up
-
-* Ensure server binds to `:8080`
-* Check container logs:
-
-  ```
-  docker-compose logs -f backend
-  ```
-
-### 3. Environment variables not loading
-
-* Use `docker-compose.yml` `environment` section
-* Avoid relying solely on `.env` inside containers
+* Prioritized correctness, stability, and structure over feature breadth
+* Ensured all backend flows are production-grade and debuggable
 
 ---
 
-## 📌 Future Improvements
+### ⚙️ Ms-SQL Server Instead of PostgreSQL
 
-* Swagger/OpenAPI documentation
-* Pagination & sorting
-* Unit and integration tests
+* Used SQL Server due to familiarity and faster setup in Docker
+* Maintained relational integrity and schema consistency
+* All queries are portable with minor syntax adjustments
 
 ---
 
-## 👨‍💻 Author
+### 🧩 No ORM — Raw SQL
 
+* Chose raw SQL over ORM for:
+
+  * Better control
+  * Performance
+  * Transparency
+* Tradeoff: slightly more verbose code
+
+---
+
+### 🔄 Dynamic Query Building
+
+* Implemented flexible filtering and update logic
+* Avoided hardcoded queries
+* Ensured safe parameter binding
+
+---
+
+## 5. Challenges Faced
+
+* Docker networking (container-to-container communication)
+* Environment variable handling inside containers
+* SQL query debugging and scan mismatches
+* Learning Go-specific patterns (error handling, struct design)
+
+---
+
+## 6. What I am Missing
+
+### 🎨 Frontend
+
+* Build a React + TypeScript UI
+* Implement authentication flow
+* Add project/task dashboards
+* Ensure responsive and polished UX
+
+---
+
+<!--  -->
+
+### 📊 Enhancements
+
+* Pagination for list endpoints
+* Task statistics endpoint (`/projects/:id/stats`)
+* Role-based access improvements
+
+---
+
+### 🧱 Infrastructure Improvements
+
+* Seed scripts for initial data
+* Deep Health checks and readiness probes
+
+---
+
+## 7. Final Note
+
+This submission reflects my approach as an engineer:
+
+* Prioritize correctness over completeness
+* Understand systems deeply rather than superficially
+* Be honest about tradeoffs and limitations
+
+While the frontend is not included, the backend is designed to **fully support it**, and extending this into a complete full-stack application would be straightforward.
+
+---
+
+## 🙏 Thank You
 ---

@@ -63,7 +63,7 @@ All core backend requirements from the assignment have been completed:
 
 ---
 
-## 3. What Is Missing (Frontend)
+## 3. How to Run Locally and What Is Missing (Frontend)
 
 ### ❌ Frontend (Not Completed)
 
@@ -80,7 +80,96 @@ Although I have backend experience, I am **very new to Go**, and a significant p
 
 Rather than rushing a frontend implementation, I chose to **focus on delivering a solid backend**, as that aligns better with my current strengths.
 
+### Run Locally:
+
+#### Steps
+
+```bash
+# 1. Clone the repository
+git clone https://github.com/your-name/taskflow
+cd taskflow
+
+# 2. Copy environment variables or create according to your local setup 
+cp .env.example .env
+
+# 3. Start the application[need Enviornment Variables so copy from .example.env]
+docker compose up --build
+```
+
 ---
+
+#### Services
+
+| Service       | URL / Port            |
+| ------------- | --------------------- |
+| Backend API   | http://localhost:9020 |
+| SQL Server DB | localhost:9010        |
+
+---
+
+#### Verify the application
+
+```bash
+curl http://localhost:9020/health
+```
+
+Expected response:
+
+```
+OK
+```
+
+---
+
+### Database Setup & Seeding
+
+### Automatic Setup
+
+* The SQL Server container is initialized automatically using Docker volumes.
+* The database schema is created via SQL scripts.
+
+---
+
+### Populate Database (Manual)
+  use the Image-prod.session.sql file to create the Schema and populate it with given Queries.
+### Example Seed Data
+
+Run the following SQL queries to insert initial data:
+
+```sql
+-- Create User
+INSERT INTO [User] (id, name, email, password, created_at)
+VALUES (NEWID(), 'Test User', 'test@example.com', '$2a$12$examplehashedpassword', GETDATE());
+
+-- Create Project
+DECLARE @userId UNIQUEIDENTIFIER = (SELECT TOP 1 id FROM [User]);
+
+INSERT INTO Project (id, name, description, owner_id, created_at)
+VALUES (NEWID(), 'Sample Project', 'Demo project', @userId, GETDATE());
+
+-- Create Tasks
+DECLARE @projectId UNIQUEIDENTIFIER = (SELECT TOP 1 id FROM Project);
+
+INSERT INTO Task (id, title, description, status, priority, project_id, assignee_id, due_date, created_at, updated_at)
+VALUES
+(NEWID(), 'Task 1', 'First task', 'todo', 'low', @projectId, @userId, GETDATE(), GETDATE(), GETDATE()),
+(NEWID(), 'Task 2', 'Second task', 'in_progress', 'medium', @projectId, @userId, GETDATE(), GETDATE(), GETDATE()),
+(NEWID(), 'Task 3', 'Third task', 'done', 'high', @projectId, @userId, GETDATE(), GETDATE(), GETDATE());
+```
+
+
+### Notes
+
+* Data is persisted using Docker volumes (`sqlserverdata`)
+* Restarting containers will NOT delete data
+* To reset database completely:
+
+```bash
+docker compose down -v
+docker compose up --build
+```
+---
+
 
 ## 4. Engineering Decisions & Tradeoffs
 

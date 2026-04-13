@@ -86,7 +86,7 @@ Rather than rushing a frontend implementation, I chose to **focus on delivering 
 
 ```bash
 # 1. Clone the repository
-git clone https://github.com/your-name/taskflow
+git clone https://github.com/ryuk-jayant/taskflow
 cd taskflow
 
 # 2. Copy environment variables or create according to your local setup 
@@ -168,12 +168,15 @@ VALUES
 docker compose down -v
 docker compose up --build
 ```
+
+### API Testing
+  Use the go-test folder for the Api Testing it has BRU files meant to be run via bruno🐶.
 ---
 
 
 ## 4. Engineering Decisions & Tradeoffs
 
-### 🧠 Focus on Backend Depth Over Full Stack Breadth
+### Focus on Backend Depth Over Full Stack Breadth
 
 * Prioritized correctness, stability, and structure over feature breadth
 * Ensured all backend flows are production-grade and debuggable

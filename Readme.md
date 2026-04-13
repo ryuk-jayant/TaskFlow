@@ -131,7 +131,7 @@ OK
 ---
 
 ### Populate Database (Manual)
-  use the Image-prod.session.sql file to create the Schema and populate it with given Queries.
+* use the Image-prod.session.sql file to create the Schema and populate it with given Queries.
 ### Example Seed Data
 
 Run the following SQL queries to insert initial data:
@@ -170,7 +170,7 @@ docker compose up --build
 ```
 
 ### API Testing
-  Use the go-test folder for the Api Testing it has BRU files meant to be run via bruno🐶.
+* Use the go-test folder for the Api Testing it has (`BRU`) files meant to be run via bruno🐶.
 ---
 
 
